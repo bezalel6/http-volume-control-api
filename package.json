@@ -1,0 +1,46 @@
+{
+  "name": "http-volume-control-api",
+  "version": "1.0.0",
+  "description": "Lightweight API server for Windows audio control using svcl.exe",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "dotenv -- tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "dotenv -- node dist/index.js",
+    "start:dev": "dotenv -- tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "keywords": [
+    "audio",
+    "volume",
+    "windows",
+    "api",
+    "svcl"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "http-volume-control": "file:../http-volume-control",
+    "pino": "^9.5.0",
+    "pino-pretty": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.6",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "dotenv-cli": "^10.0.0",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
