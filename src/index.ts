@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import pino from 'pino';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -14,11 +13,13 @@ import devicesRouter from './routes/devices';
 import applicationsRouter from './routes/applications';
 import processesRouter from './routes/processes';
 import settingsRouter from './routes/settings';
+import pairingRouter from './routes/pairing';
 import debugRouter from './routes/debug';
 
 // Import middleware
-import { apiKeyAuth } from './middleware/auth';
+import { sessionAuth } from './middleware/session-auth';
 import { errorHandler } from './middleware/error-handler';
+import { apiLimiter, strictApiLimiter, healthCheckLimiter, authLimiter } from './middleware/rate-limiter';
 
 // Create Express app
 const app = express();
@@ -57,16 +58,8 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
-app.use('/api', limiter);
-
 // Request logging (simple middleware)
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   logger.info({ method: req.method, url: req.url }, 'Request');
   next();
 });
@@ -78,8 +71,8 @@ app.use(express.urlencoded({ extended: true }));
 // Static file serving for icons
 app.use('/icons', express.static(path.join(process.cwd(), 'icons')));
 
-// Health check
-app.get('/health', (req, res) => {
+// Health check with its own rate limiter
+app.get('/health', healthCheckLimiter, (_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -87,11 +80,15 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes
-app.use('/api/devices', apiKeyAuth, devicesRouter);
-app.use('/api/applications', apiKeyAuth, applicationsRouter);
-app.use('/api/processes', apiKeyAuth, processesRouter);
-app.use('/api/settings', apiKeyAuth, settingsRouter);
+// Pairing routes with auth rate limiter
+app.use('/api/pairing', authLimiter, pairingRouter);
+
+// Protected API routes with rate limiting
+app.use('/api/devices', sessionAuth, apiLimiter, devicesRouter);
+app.use('/api/applications', sessionAuth, strictApiLimiter, applicationsRouter);
+app.use('/api/processes', sessionAuth, apiLimiter, processesRouter);
+app.use('/api/settings', sessionAuth, apiLimiter, settingsRouter);
+app.use('/api', apiLimiter, pairingRouter); // Session management routes
 
 // Debug routes (only in development)
 if (process.env.NODE_ENV !== 'production') {
@@ -102,7 +99,7 @@ if (process.env.NODE_ENV !== 'production') {
 app.use(errorHandler);
 
 // 404 handler
-app.use((req, res) => {
+app.use((_req, res) => {
   res.status(404).json({
     success: false,
     error: 'Endpoint not found',
@@ -114,6 +111,9 @@ app.use((req, res) => {
 app.listen(port, () => {
   logger.info(`🎵 HTTP Volume Control API listening on port ${port}`);
   logger.info(`📍 Health check: http://localhost:${port}/health`);
-  logger.info(`🔐 API Key Auth: ${process.env.API_KEY_ENABLED === 'true' ? 'Enabled' : 'Disabled'}`);
+  logger.info(`🔐 Pairing-based authentication enabled`);
+  logger.info(`🔢 Pairing code length: ${process.env.PAIRING_CODE_LENGTH || '6'} characters`);
+  logger.info(`⏱️  Pairing code expiry: ${process.env.PAIRING_CODE_EXPIRY || '300'} seconds`);
   logger.info(`🌐 CORS Origins: ${process.env.CORS_ORIGIN || 'http://localhost:5173'}`);
+  logger.info(`\n📱 To pair a device, use POST /api/pairing/initiate`);
 });
