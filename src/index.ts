@@ -43,17 +43,10 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" } // Allow icon serving
 }));
 
-// CORS configuration
+// CORS configuration - Allow all origins since we have pairing-based authentication
 const corsOptions = {
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173'];
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
+  origin: true, // Allow all origins
+  credentials: true, // Allow cookies for session management
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
@@ -114,6 +107,6 @@ app.listen(port, () => {
   logger.info(`🔐 Pairing-based authentication enabled`);
   logger.info(`🔢 Pairing code length: ${process.env.PAIRING_CODE_LENGTH || '6'} characters`);
   logger.info(`⏱️  Pairing code expiry: ${process.env.PAIRING_CODE_EXPIRY || '300'} seconds`);
-  logger.info(`🌐 CORS Origins: ${process.env.CORS_ORIGIN || 'http://localhost:5173'}`);
+  logger.info(`🌐 CORS: Accepting all origins (secured via pairing authentication)`);
   logger.info(`\n📱 To pair a device, use POST /api/pairing/initiate`);
 });
