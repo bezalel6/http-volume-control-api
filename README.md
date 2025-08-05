@@ -2,6 +2,39 @@
 
 A lightweight REST API server for controlling Windows audio devices and application volumes using `svcl.exe`.
 
+> **📱 Web Interface Available**: This API is designed to work with the [HTTP Volume Control Web](https://github.com/bezalel6/http-volume-control-web) client for a complete audio control solution.
+
+## Project Structure
+
+This is part of the **HTTP Volume Control** project consisting of two repositories:
+
+- **[http-volume-control-api](https://github.com/bezalel6/http-volume-control-api)** ← *You are here* - REST API server (this repository)
+- **[http-volume-control-web](https://github.com/bezalel6/http-volume-control-web)** - Modern React web interface
+
+## Quick Start (Complete Setup)
+
+1. **Clone both repositories:**
+   ```bash
+   git clone https://github.com/bezalel6/http-volume-control-api.git
+   git clone https://github.com/bezalel6/http-volume-control-web.git
+   ```
+
+2. **Start the API server:**
+   ```bash
+   cd http-volume-control-api
+   npm install
+   npm run dev  # Runs on http://localhost:3001
+   ```
+
+3. **Start the web interface:**
+   ```bash
+   cd http-volume-control-web  
+   npm install
+   npm run dev  # Runs on http://localhost:5173
+   ```
+
+4. **Open the web interface** at http://localhost:5173 and start controlling your audio!
+
 ## Features
 
 - Control system audio device volumes
